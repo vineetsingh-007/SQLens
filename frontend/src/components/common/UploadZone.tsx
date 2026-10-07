@@ -75,7 +75,7 @@ export const UploadZone: React.FC = () => {
           msg = err.response.data.message;
         }
       } else if (err.message) {
-        msg = `Network Error (${err.message}). Please ensure the SQLens backend server is running.`;
+        msg = `Network Error (${err.message}). Please ensure the SQLens backend server is reachable.`;
       }
       setErrorMessage(msg);
       setStatusState('error');
