@@ -38,6 +38,8 @@ backend/sqlens.db
 # Data / Uploads
 data/uploads/*
 !data/uploads/.gitkeep
+test_uploads/
+backend/test_uploads/
 
 # Node / React
 node_modules/
