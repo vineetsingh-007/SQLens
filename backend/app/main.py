@@ -11,7 +11,7 @@ logger = logging.getLogger("sqlens")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Initializing SQLens metadata database tables...")
+    logger.info("Initializing SQLens database tables...")
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("SQLens metadata tables initialized successfully.")
@@ -25,25 +25,23 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS dynamically for local ports and Vercel domains
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS or ["http://localhost:5173"],
-    allow_origin_regex=r"(https?://.*\.vercel\.app)|(http://(localhost|127\.0\.0\.1)(:\d+)?)",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Configure CORS dynamically for all local ports
+if settings.CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
-@app.get("/api")
-@app.get("/api/")
 def root():
     return {
-        "status": "healthy",
-        "service": "SQLens API",
+        "message": "Welcome to SQLens API",
         "health_check": "/api/health",
         "docs": "/docs"
     }
