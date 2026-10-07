@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 from typing import Generator
 from urllib.parse import quote_plus, unquote
@@ -10,7 +11,7 @@ from app.core.config import settings
 logger = logging.getLogger("sqlens.database")
 
 def format_database_url(url_str: str) -> str:
-    """Format, normalize, and encode credentials in a database connection URL safely."""
+    """Format, normalize, add sslmode=require if missing, and encode credentials safely."""
     if not url_str:
         return "sqlite:///./sqlens.db"
 
@@ -23,30 +24,39 @@ def format_database_url(url_str: str) -> str:
     if url_str.startswith("sqlite"):
         return url_str
 
+    # Ensure sslmode=require for PostgreSQL if not specified
+    if "postgresql" in url_str and "sslmode=" not in url_str:
+        delimiter = "&" if "?" in url_str else "?"
+        url_str = f"{url_str}{delimiter}sslmode=require"
+
     try:
         url_obj = make_url(url_str)
         return str(url_obj)
     except Exception:
-        # Handle unencoded special characters in password
+        # Fallback regex parser for passwords containing raw unencoded special characters
         try:
-            pattern = r"^(postgresql(?:\+[a-z0-9]+)?):\/\/([^:]+):(.*)@([^:\/]+)(?::(\d+))?\/(.+)$"
+            pattern = r"^(postgresql(?:\+[a-z0-9]+)?):\/\/([^:]+):(.*)@([^:\/\?]+)(?::(\d+))?\/(.+)$"
             match = re.match(pattern, url_str)
             if match:
-                scheme, user, password, host, port, dbname = match.groups()
+                scheme, user, password, host, port, rest = match.groups()
                 encoded_user = quote_plus(unquote(user))
                 encoded_pass = quote_plus(unquote(password))
                 port_str = f":{port}" if port else ""
-                return f"{scheme}://{encoded_user}:{encoded_pass}@{host}{port_str}/{dbname}"
+                return f"{scheme}://{encoded_user}:{encoded_pass}@{host}{port_str}/{rest}"
         except Exception as parse_err:
-            logger.warning(f"Unable to parse database URL: {parse_err}")
+            logger.warning(f"Unable to parse custom database URL: {parse_err}")
         return url_str
 
 def create_app_engine(raw_url: str):
-    """Initialize database engine with safe pooling and fallback to SQLite if PostgreSQL is unreachable."""
+    """Initialize database engine with safe pooling and sslmode=require for Supabase PostgreSQL."""
     db_url = format_database_url(raw_url)
     is_sqlite = db_url.startswith("sqlite")
 
     connect_args = {"check_same_thread": False} if is_sqlite else {}
+    
+    if not is_sqlite and "sslmode" not in db_url:
+        connect_args["sslmode"] = "require"
+
     engine_kwargs = {
         "pool_pre_ping": True,
         "connect_args": connect_args
@@ -59,17 +69,20 @@ def create_app_engine(raw_url: str):
 
     try:
         eng = create_engine(db_url, **engine_kwargs)
+        # Test initial connection
         with eng.connect() as conn:
             conn.execute(text("SELECT 1"))
         logger.info(f"Database connected successfully using dialect: {eng.name}")
         return eng
     except Exception as e:
-        if not is_sqlite:
-            logger.warning(f"PostgreSQL database connection failed: {e}. Falling back to local SQLite database.")
+        logger.error(f"Database connection attempt failed: {e}")
+        # If DATABASE_URL was explicitly provided as PostgreSQL, keep PostgreSQL engine so connection retries or detailed errors surface!
+        if not is_sqlite and raw_url and ("postgresql" in raw_url or "postgres" in raw_url):
+            logger.warning("Retaining PostgreSQL engine for connection retries on serverless invocations.")
+            return create_engine(db_url, **engine_kwargs)
+        else:
             fallback_url = "sqlite:///./sqlens.db"
             return create_engine(fallback_url, pool_pre_ping=True, connect_args={"check_same_thread": False})
-        else:
-            raise e
 
 engine = create_app_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
