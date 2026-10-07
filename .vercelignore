@@ -1,0 +1,13 @@
+# Exclude heavy data files, local databases, test caches, and node_modules from Vercel Serverless Function bundle
+data/
+sqlens.db
+*.db
+*.sqlite
+*.sqlite3
+backend/test_uploads/
+tests/
+.pytest_cache/
+node_modules/
+.git/
+.vscode/
+.idea/

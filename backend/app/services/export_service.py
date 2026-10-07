@@ -2,28 +2,13 @@ import io
 import base64
 from datetime import datetime
 from typing import List, Dict, Any
-import pandas as pd
-from PIL import Image as PILImage
-
-from docx import Document
-from docx.shared import Inches, Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
-
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, Image as RLImage
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 from app.schemas.export import ExportRequest
 
 
-
 def generate_excel(request: ExportRequest) -> bytes:
     """Generate Excel (.xlsx) file bytes from query results."""
+    import pandas as pd
     columns = request.columns or []
     rows = request.rows or []
 
@@ -69,6 +54,8 @@ def openpyxl_col_name(n: int) -> str:
 
 def set_cell_background(cell, fill_hex: str):
     """Helper to set cell background color in python-docx."""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
     tc_pr = cell._element.get_or_add_tcPr()
     shd = OxmlElement('w:shd')
     shd.set(qn('w:val'), 'clear')
@@ -79,6 +66,11 @@ def set_cell_background(cell, fill_hex: str):
 
 def generate_docx(request: ExportRequest) -> bytes:
     """Generate Word (.docx) file bytes from query results."""
+    from docx import Document
+    from docx.shared import Inches, Pt, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+
     doc = Document()
     
     # Page Margins
@@ -215,6 +207,12 @@ def generate_docx(request: ExportRequest) -> bytes:
 
 def generate_pdf(request: ExportRequest) -> bytes:
     """Generate PDF (.pdf) file bytes from query results using ReportLab."""
+    from PIL import Image as PILImage
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, Image as RLImage
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
     output = io.BytesIO()
     
     columns = request.columns or []

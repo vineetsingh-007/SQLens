@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/index.py": {
+      "excludeFiles": "{data/**,tests/**,sqlens.db,*.db,.pytest_cache/**,node_modules/**}"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
