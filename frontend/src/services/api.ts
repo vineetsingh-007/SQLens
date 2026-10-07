@@ -10,7 +10,10 @@ import {
   HealthResponse
 } from '../types/dataset';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const BASE_URL =
+  import.meta.env.VITE_BACKEND_URL
+    ? `${import.meta.env.VITE_BACKEND_URL}/api`
+    : (import.meta.env.VITE_API_BASE_URL || '/api');
 
 const getSessionId = (): string => {
   let sid = localStorage.getItem('sqlens_session_id');
