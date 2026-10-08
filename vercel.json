@@ -1,7 +1,9 @@
 {
+  "version": 2,
   "functions": {
     "api/index.py": {
-      "excludeFiles": "{data/**,tests/**,sqlens.db,*.db,.pytest_cache/**,node_modules/**}"
+      "includeFiles": "backend/app/**",
+      "excludeFiles": "{data/**,tests/**,backend/venv/**,backend/test_uploads/**,backend/data/**,sqlens.db,backend/sqlens.db,*.db,*.pdf,.pytest_cache/**,node_modules/**,**/node_modules/**}"
     }
   },
   "rewrites": [

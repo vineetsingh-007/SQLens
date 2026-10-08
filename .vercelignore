@@ -1,13 +1,46 @@
-# Exclude heavy data files, local databases, test caches, and node_modules from Vercel Serverless Function bundle
-data/
-sqlens.db
+# Exclude local virtual environments
+.venv
+**/.venv/**
+venv
+**/venv/**
+backend/venv
+backend/venv/**
+
+# Exclude Node dependencies
+node_modules
+**/node_modules/**
+frontend/node_modules
+frontend/node_modules/**
+
+# Exclude Python caches & testing
+__pycache__
+**/__pycache__/**
+*.pyc
+.pytest_cache
+**/.pytest_cache/**
+tests
+**/tests/**
+.coverage
+htmlcov
+
+# Exclude local databases & temporary upload files
 *.db
 *.sqlite
 *.sqlite3
-backend/test_uploads/
-tests/
-.pytest_cache/
-node_modules/
-.git/
-.vscode/
-.idea/
+sqlens.db
+backend/sqlens.db
+backend/test_uploads
+backend/test_uploads/**
+data/uploads/*
+!data/uploads/.gitkeep
+
+# Exclude development logs, PDFs, and IDE files
+*.log
+*.pdf
+backend/*.pdf
+.git
+.git/**
+.vscode
+.idea
+.DS_Store
+Thumbs.db
