@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     GEMINI_MAX_OUTPUT_TOKENS: int = int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "2048"))
 
     model_config = {
-        "env_file": ".env",
+        "env_file": [".env", "backend/.env", "../.env"],
         "extra": "ignore"
     }
 

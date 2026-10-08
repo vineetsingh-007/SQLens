@@ -46,7 +46,8 @@ def create_app_engine(raw_url: str):
     except Exception as e:
         if not db_url.startswith("sqlite"):
             logger.warning(f"PostgreSQL connection failed ({e}). Falling back to local SQLite database.")
-            fallback_url = "sqlite:///./sqlens.db"
+            import tempfile
+            fallback_url = f"sqlite:///{Path(tempfile.gettempdir()) / 'sqlens.db'}"
             return create_engine(fallback_url, pool_pre_ping=True, connect_args={"check_same_thread": False})
         else:
             raise e
